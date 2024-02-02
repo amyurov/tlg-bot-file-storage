@@ -1,12 +1,17 @@
 package com.amyurov.service.impl;
 
+import com.amyurov.entity.AppDocument;
+import com.amyurov.entity.AppPhoto;
 import com.amyurov.entity.AppUser;
 import com.amyurov.entity.RawData;
 import com.amyurov.entity.enums.UserState;
+import com.amyurov.exception.UploadFileException;
 import com.amyurov.repository.AppUserRepository;
 import com.amyurov.repository.RawDataRepository;
+import com.amyurov.service.FileService;
 import com.amyurov.service.MainService;
 import com.amyurov.service.ProducerService;
+import com.amyurov.service.ServiceCommands;
 import lombok.extern.log4j.Log4j;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -23,12 +28,14 @@ public class MainServiceImpl implements MainService {
     private final RawDataRepository rawDataRepository;
     private final ProducerService producerService;
     private final AppUserRepository appUserRepository;
+    private final FileService fileService;
 
     public MainServiceImpl(RawDataRepository rawDataRepository, ProducerService producerService,
-            AppUserRepository appUserRepository) {
+            AppUserRepository appUserRepository, FileService fileService) {
         this.rawDataRepository = rawDataRepository;
         this.producerService = producerService;
         this.appUserRepository = appUserRepository;
+        this.fileService = fileService;
     }
 
     @Override
@@ -36,12 +43,14 @@ public class MainServiceImpl implements MainService {
         saveRawData(update);
         AppUser appUser = findOrSaveAppUser(update);
         UserState userState = appUser.getUserState();
-        String text = update.getMessage().getText();
+        String messageText = update.getMessage().getText();
         String output = " ";
-        if (CANCEL.equals(text)) {
+
+         ServiceCommands serviceCommands = ServiceCommands.fromValue(messageText);
+        if (CANCEL.equals(serviceCommands)) {
             output = cancelProcess(appUser);
         } else if (BASIC_STATE.equals(userState)) {
-            output = processServiceCommand(appUser, text);
+            output = processServiceCommand(appUser, messageText);
         } else if (WAIT_FOR_EMAIL_ACTIVE.equals(userState)) {
             //TODO wait for registration impl
         } else {
@@ -63,8 +72,16 @@ public class MainServiceImpl implements MainService {
             return;
         }
 
-        String answer = "Файл загружен. Ссылка для скачивания: ";
-        sendAnswer(answer, chatId);
+        try {
+            AppDocument doc = fileService.processDoc(update.getMessage());
+            // TODO impl link generation
+            String answer = "Документ успешно загружен. Ссылка для скачивания: \n" + "http://link.ru";
+            sendAnswer(answer, chatId);
+        } catch (UploadFileException e) {
+            log.error(e);
+            String error = "К сожалению ошибка при ... Повторите попытку";
+            sendAnswer(error, chatId);
+        }
     }
 
 
@@ -77,8 +94,16 @@ public class MainServiceImpl implements MainService {
             return;
         }
 
-        String answer = "Фото загружен. Ссылка для скачивания: ";
-        sendAnswer(answer, chatId);
+        try {
+            AppPhoto appPhoto = fileService.processPhoto(update.getMessage());
+            // TODO impl link generation
+            String answer = "Фото успешно загружено. Ссылка для скачивания: \n" + "http://link.ru";
+            sendAnswer(answer, chatId);
+        } catch (UploadFileException e) {
+            log.error(e);
+            String error = "К сожалению ошибка при ... Повторите попытку";
+            sendAnswer(error, chatId);
+        }
     }
 
     private boolean isNotAllowedToSendContent(Long chatId, AppUser appUser) {
@@ -103,12 +128,13 @@ public class MainServiceImpl implements MainService {
     }
 
     private String processServiceCommand(AppUser appUser, String text) {
-        if (REGISTRATION.equals(text)) {
+        ServiceCommands serviceCommands = fromValue(text);
+        if (REGISTRATION.equals(serviceCommands)) {
             // TODO
             return "Временно недоступно";
-        } else if (HELP.equals(text)) {
+        } else if (HELP.equals(serviceCommands)) {
             return help();
-        } else if (START.equals(text)) {
+        } else if (START.equals(serviceCommands)) {
             return "Приветствую, чтобы просмотреть список команд введите /help";
         } else {
             return "Неизвестная команда, чтобы просмотреть список команд введите /help";

@@ -5480,3 +5480,5 @@
 2024-02-02 18:34:59 DEBUG ConsumerServiceImpl:29 - NODE: Text message is received from rmq
 2024-02-02 18:35:25 DEBUG ConsumerServiceImpl:43 - NODE: Photo message is received from rmq
 2024-02-02 18:35:42 DEBUG ConsumerServiceImpl:36 - NODE: Doc message is received from rmq
+2024-02-02 21:49:24 DEBUG ConsumerServiceImpl:36 - NODE: Doc message is received from rmq
+2024-02-02 22:37:03 DEBUG ConsumerServiceImpl:43 - NODE: Photo message is received from rmq
