@@ -13,6 +13,7 @@
         <module>dispatcher</module>
         <module>common-rmq</module>
         <module>node</module>
+        <module>common-jpa</module>
     </modules>
 
     <properties>

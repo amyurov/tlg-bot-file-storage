@@ -5470,3 +5470,13 @@
 2024-02-01 22:19:49 DEBUG ConsumerServiceImpl:29 - NODE: Text message is received from rmq
 2024-02-01 22:19:51 DEBUG ConsumerServiceImpl:29 - NODE: Text message is received from rmq
 2024-02-01 22:19:53 DEBUG ConsumerServiceImpl:29 - NODE: Text message is received from rmq
+2024-02-02 13:01:25 DEBUG ConsumerServiceImpl:29 - NODE: Text message is received from rmq
+2024-02-02 13:49:29 DEBUG ConsumerServiceImpl:29 - NODE: Text message is received from rmq
+2024-02-02 13:53:21 DEBUG ConsumerServiceImpl:29 - NODE: Text message is received from rmq
+2024-02-02 18:34:43 DEBUG ConsumerServiceImpl:29 - NODE: Text message is received from rmq
+2024-02-02 18:34:45 DEBUG ConsumerServiceImpl:29 - NODE: Text message is received from rmq
+2024-02-02 18:34:48 DEBUG ConsumerServiceImpl:29 - NODE: Text message is received from rmq
+2024-02-02 18:34:50 DEBUG ConsumerServiceImpl:29 - NODE: Text message is received from rmq
+2024-02-02 18:34:59 DEBUG ConsumerServiceImpl:29 - NODE: Text message is received from rmq
+2024-02-02 18:35:25 DEBUG ConsumerServiceImpl:43 - NODE: Photo message is received from rmq
+2024-02-02 18:35:42 DEBUG ConsumerServiceImpl:36 - NODE: Doc message is received from rmq
