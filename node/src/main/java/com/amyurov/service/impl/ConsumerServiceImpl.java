@@ -15,11 +15,9 @@ import static com.amyurov.model.RabbitQueue.*;
 @Service
 @Log4j
 public class ConsumerServiceImpl implements ConsumerService {
-    private final ProducerService producerService;
     private final MainService mainService;
 
-    public ConsumerServiceImpl(ProducerService producerService, MainService mainService) {
-        this.producerService = producerService;
+    public ConsumerServiceImpl(MainService mainService) {
         this.mainService = mainService;
     }
 

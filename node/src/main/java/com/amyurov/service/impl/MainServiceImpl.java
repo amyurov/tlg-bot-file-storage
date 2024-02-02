@@ -84,7 +84,6 @@ public class MainServiceImpl implements MainService {
         }
     }
 
-
     @Override
     public void processPhotoMessage(Update update) {
         saveRawData(update);
