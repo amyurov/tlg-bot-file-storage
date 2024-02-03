@@ -8,6 +8,8 @@ import com.amyurov.repository.AppDocRepository;
 import com.amyurov.repository.AppPhotoRepository;
 import com.amyurov.repository.BinaryContentRepository;
 import com.amyurov.service.FileService;
+import com.amyurov.service.enums.LinkType;
+import com.amyurov.utils.CryptoTool;
 import lombok.extern.log4j.Log4j;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,16 +35,20 @@ public class FileServiceImpl implements FileService {
     private String fileInfoUri;
     @Value("${service.file_storage.uri}")
     private String fileStorageUri;
+    @Value("${link.address}")
+    private String link;
 
-    private AppDocRepository appDocRepository;
-    private AppPhotoRepository appPhotoRepository;
-    private BinaryContentRepository binaryContentRepository;
+    private final AppDocRepository appDocRepository;
+    private final AppPhotoRepository appPhotoRepository;
+    private final BinaryContentRepository binaryContentRepository;
+    private final CryptoTool cryptoTool;
 
     public FileServiceImpl(AppDocRepository appDocRepository, AppPhotoRepository appPhotoRepository,
-            BinaryContentRepository binaryContentRepository) {
+            BinaryContentRepository binaryContentRepository, CryptoTool cryptoTool) {
         this.appDocRepository = appDocRepository;
         this.appPhotoRepository = appPhotoRepository;
         this.binaryContentRepository = binaryContentRepository;
+        this.cryptoTool = cryptoTool;
     }
 
     @Override
@@ -63,7 +69,8 @@ public class FileServiceImpl implements FileService {
     @Override
     public AppPhoto processPhoto(Message telegramMessage) {
         // TODO case works only for 1 uploaded photo
-        PhotoSize telegramPhoto = telegramMessage.getPhoto().get(0);
+        int size = telegramMessage.getPhoto().size();
+        PhotoSize telegramPhoto = telegramMessage.getPhoto().get(size - 1);
         String fileId = telegramPhoto.getFileId();
         ResponseEntity<String> response = getFilePath(fileId);
         if (response.getStatusCode() == HttpStatus.OK) {
@@ -73,6 +80,12 @@ public class FileServiceImpl implements FileService {
         } else {
             throw new UploadFileException("Bad response from tlg: " + response);
         }
+    }
+
+    @Override
+    public String generateLink(Long docId, LinkType type) {
+        String hashedId = cryptoTool.hashOf(docId);
+        return "http://" + link + "/" + type + "?id=" + hashedId;
     }
 
     private BinaryContent getPersistentBinaryContent(ResponseEntity<String> response) {
@@ -115,7 +128,7 @@ public class FileServiceImpl implements FileService {
             throw new RuntimeException(e);
         }
 
-        try (InputStream inputStream = urlObj.openStream();) {
+        try (InputStream inputStream = urlObj.openStream()) {
             return inputStream.readAllBytes();
         } catch (IOException e) {
             throw new UploadFileException(urlObj.toExternalForm(), e);

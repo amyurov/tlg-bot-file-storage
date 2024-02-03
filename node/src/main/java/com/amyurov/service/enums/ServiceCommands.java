@@ -1,4 +1,4 @@
-package com.amyurov.service;
+package com.amyurov.service.enums;
 
 public enum ServiceCommands {
     HELP("/help"),

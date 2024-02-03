@@ -11,7 +11,8 @@ import com.amyurov.repository.RawDataRepository;
 import com.amyurov.service.FileService;
 import com.amyurov.service.MainService;
 import com.amyurov.service.ProducerService;
-import com.amyurov.service.ServiceCommands;
+import com.amyurov.service.enums.LinkType;
+import com.amyurov.service.enums.ServiceCommands;
 import lombok.extern.log4j.Log4j;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -20,7 +21,7 @@ import org.telegram.telegrambots.meta.api.objects.User;
 
 import static com.amyurov.entity.enums.UserState.BASIC_STATE;
 import static com.amyurov.entity.enums.UserState.WAIT_FOR_EMAIL_ACTIVE;
-import static com.amyurov.service.ServiceCommands.*;
+import static com.amyurov.service.enums.ServiceCommands.*;
 
 @Service
 @Log4j
@@ -46,7 +47,7 @@ public class MainServiceImpl implements MainService {
         String messageText = update.getMessage().getText();
         String output = " ";
 
-         ServiceCommands serviceCommands = ServiceCommands.fromValue(messageText);
+        ServiceCommands serviceCommands = ServiceCommands.fromValue(messageText);
         if (CANCEL.equals(serviceCommands)) {
             output = cancelProcess(appUser);
         } else if (BASIC_STATE.equals(userState)) {
@@ -68,14 +69,15 @@ public class MainServiceImpl implements MainService {
         saveRawData(update);
         AppUser appUser = findOrSaveAppUser(update);
         Long chatId = update.getMessage().getChatId();
+
         if (isNotAllowedToSendContent(chatId, appUser)) {
             return;
         }
 
         try {
             AppDocument doc = fileService.processDoc(update.getMessage());
-            // TODO impl link generation
-            String answer = "Документ успешно загружен. Ссылка для скачивания: \n" + "http://link.ru";
+            String link = fileService.generateLink(doc.getId(), LinkType.GET_DOC);
+            String answer = "Документ успешно загружен. Ссылка для скачивания: \n" + link;
             sendAnswer(answer, chatId);
         } catch (UploadFileException e) {
             log.error(e);
@@ -89,14 +91,15 @@ public class MainServiceImpl implements MainService {
         saveRawData(update);
         AppUser appUser = findOrSaveAppUser(update);
         Long chatId = update.getMessage().getChatId();
+
         if (isNotAllowedToSendContent(chatId, appUser)) {
             return;
         }
 
         try {
-            AppPhoto appPhoto = fileService.processPhoto(update.getMessage());
-            // TODO impl link generation
-            String answer = "Фото успешно загружено. Ссылка для скачивания: \n" + "http://link.ru";
+            AppPhoto photo = fileService.processPhoto(update.getMessage());
+            String link = fileService.generateLink(photo.getId(), LinkType.GET_PHOTO);
+            String answer = "Фото успешно загружено. Ссылка для скачивания: \n" + link;
             sendAnswer(answer, chatId);
         } catch (UploadFileException e) {
             log.error(e);

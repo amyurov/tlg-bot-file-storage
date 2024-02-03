@@ -6,6 +6,7 @@ import com.amyurov.entity.BinaryContent;
 import com.amyurov.repository.AppDocRepository;
 import com.amyurov.repository.AppPhotoRepository;
 import com.amyurov.service.FileService;
+import com.amyurov.utils.CryptoTool;
 import lombok.extern.log4j.Log4j;
 import org.apache.commons.io.FileUtils;
 import org.springframework.core.io.FileSystemResource;
@@ -18,25 +19,32 @@ import java.io.IOException;
 @Log4j
 public class FileServiceImpl implements FileService {
 
-    private AppDocRepository appDocRepository;
-    private AppPhotoRepository appPhotoRepository;
+    private final AppDocRepository appDocRepository;
+    private final AppPhotoRepository appPhotoRepository;
+    private final CryptoTool cryptoTool;
 
-    public FileServiceImpl(AppDocRepository appDocRepository, AppPhotoRepository appPhotoRepository) {
+    public FileServiceImpl(AppDocRepository appDocRepository, AppPhotoRepository appPhotoRepository,
+            CryptoTool cryptoTool) {
         this.appDocRepository = appDocRepository;
         this.appPhotoRepository = appPhotoRepository;
+        this.cryptoTool = cryptoTool;
     }
 
     @Override
     public AppDocument getDocument(String docId) {
-        // TODO add decode hashed id
-        Long id = Long.parseLong(docId);
+        Long id = cryptoTool.idOf(docId);
+        if (id == null) {
+            return null;
+        }
         return appDocRepository.findById(id).orElse(null);
     }
 
     @Override
     public AppPhoto getPhoto(String photoId) {
-        // TODO add decode hashed id
-        Long id = Long.parseLong(photoId);
+        Long id = cryptoTool.idOf(photoId);
+        if (id == null) {
+            return null;
+        }
         return appPhotoRepository.findById(id).orElse(null);
     }
 
