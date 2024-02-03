@@ -8,6 +8,7 @@ import com.amyurov.entity.enums.UserState;
 import com.amyurov.exception.UploadFileException;
 import com.amyurov.repository.AppUserRepository;
 import com.amyurov.repository.RawDataRepository;
+import com.amyurov.service.AppUserService;
 import com.amyurov.service.FileService;
 import com.amyurov.service.MainService;
 import com.amyurov.service.ProducerService;
@@ -18,6 +19,8 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
+
+import java.util.Optional;
 
 import static com.amyurov.entity.enums.UserState.BASIC_STATE;
 import static com.amyurov.entity.enums.UserState.WAIT_FOR_EMAIL_ACTIVE;
@@ -30,13 +33,16 @@ public class MainServiceImpl implements MainService {
     private final ProducerService producerService;
     private final AppUserRepository appUserRepository;
     private final FileService fileService;
+    private final AppUserService appUserService;
+
 
     public MainServiceImpl(RawDataRepository rawDataRepository, ProducerService producerService,
-            AppUserRepository appUserRepository, FileService fileService) {
+            AppUserRepository appUserRepository, FileService fileService, AppUserService appUserService) {
         this.rawDataRepository = rawDataRepository;
         this.producerService = producerService;
         this.appUserRepository = appUserRepository;
         this.fileService = fileService;
+        this.appUserService = appUserService;
     }
 
     @Override
@@ -53,7 +59,7 @@ public class MainServiceImpl implements MainService {
         } else if (BASIC_STATE.equals(userState)) {
             output = processServiceCommand(appUser, messageText);
         } else if (WAIT_FOR_EMAIL_ACTIVE.equals(userState)) {
-            //TODO wait for registration impl
+            output = appUserService.setEmail(appUser, messageText);
         } else {
             log.error("Unknown userState: " + userState);
             output = "Неизветсная ошибка! Введите /cancel и попробуйте снова!";
@@ -155,19 +161,18 @@ public class MainServiceImpl implements MainService {
 
     private AppUser findOrSaveAppUser(Update update) {
         User tlgUser = update.getMessage().getFrom();
-        AppUser persistentAppUser = appUserRepository.findAppUserByTelegramUserId(tlgUser.getId());
-        if (persistentAppUser == null) {
+        Optional<AppUser> persistentAppUser = appUserRepository.findByTelegramUserId(tlgUser.getId());
+        if (persistentAppUser.isEmpty()) {
             AppUser transientAppuser = AppUser.builder()
                     .telegramUserId(tlgUser.getId())
                     .userName(tlgUser.getUserName())
                     .lastName(tlgUser.getLastName())
-                    // TODO change default val after registration impl
-                    .isActive(true)
+                    .isActive(false)
                     .userState(BASIC_STATE)
                     .build();
             return appUserRepository.save(transientAppuser);
         }
-        return persistentAppUser;
+        return persistentAppUser.get();
     }
 
     private void saveRawData(Update update) {

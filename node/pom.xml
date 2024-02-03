@@ -45,6 +45,12 @@
             <artifactId>hibernate-types-52</artifactId>
             <version>2.21.1</version>
         </dependency>
+        <dependency>
+            <groupId>javax.mail</groupId>
+            <artifactId>mail</artifactId>
+            <version>1.4.7</version>
+        </dependency>
+
 
         <dependency>
             <groupId>com.amyurov</groupId>
